@@ -1,0 +1,23 @@
+# Define the OU path where you want to search for computers
+$ouPath = "OU=Computers,DC=domain,DC=com"  # Replace with your OU path
+
+# Define the software name you want to check for (Office 365)
+$softwareName = "Microsoft Office 365"
+
+# Get a list of computer names in the specified OU
+$computerNames = Get-ADComputer -SearchBase $ouPath -Filter * | Select-Object -ExpandProperty Name
+
+# Loop through the list of computer names
+foreach ($computerName in $computerNames) {
+    # Construct the remote computer UNC path
+    $computerPath = "\\$computerName"
+
+    # Use Get-WmiObject to query installed software
+    $software = Get-WmiObject -Class Win32_Product -ComputerName $computerName | Where-Object { $_.Name -like "*$softwareName*" }
+
+    if ($software) {
+        Write-Host "$softwareName is installed on $computerName"
+    } else {
+        Write-Host "$softwareName is not installed on $computerName"
+    }
+}
